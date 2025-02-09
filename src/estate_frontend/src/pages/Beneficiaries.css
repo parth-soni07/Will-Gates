@@ -1,0 +1,172 @@
+.beneficiaries-container {
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 3rem 1rem;
+}
+
+.beneficiaries-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.beneficiaries-title {
+    font-size: 1.875rem;
+    font-weight: bold;
+    color: white;
+}
+
+.add-beneficiary-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #3b82f6;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.add-beneficiary-button:hover {
+    background-color: #2563eb;
+}
+
+.beneficiaries-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .beneficiaries-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.beneficiary-card {
+    background-color: #1f2937;
+    border-radius: 0.5rem;
+    border: 1px solid #374151;
+    padding: 1.5rem;
+}
+
+.beneficiary-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.beneficiary-info {
+    display: flex;
+    align-items: center;
+}
+
+.beneficiary-avatar {
+    background-color: #374151;
+    border-radius: 9999px;
+    padding: 0.75rem;
+}
+
+.beneficiary-avatar-icon {
+    height: 1.5rem;
+    width: 1.5rem;
+    color: #60a5fa;
+}
+
+.beneficiary-details {
+    margin-left: 1rem;
+}
+
+.beneficiary-name {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: white;
+}
+
+.beneficiary-relationship {
+    font-size: 0.875rem;
+    color: #9ca3af;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-badge.verified {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge.pending {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.contact-info {
+    display: flex;
+    align-items: center;
+    color: #d1d5db;
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+}
+
+.contact-icon {
+    height: 1rem;
+    width: 1rem;
+    margin-right: 0.5rem;
+}
+
+.assigned-assets {
+    border-top: 1px solid #374151;
+    padding-top: 0.75rem;
+}
+
+.assets-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #d1d5db;
+    margin-bottom: 0.5rem;
+}
+
+.assets-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.asset-tag {
+    background-color: #374151;
+    color: #d1d5db;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+}
+
+.card-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.edit-button {
+    color: #3b82f6;
+    background: none;
+    border: none;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.edit-button:hover {
+    color: #60a5fa;
+}
