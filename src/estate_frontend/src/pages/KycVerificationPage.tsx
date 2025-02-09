@@ -8,9 +8,11 @@ import {
   X,
 } from "lucide-react";
 import "./KycVerificationPage.css";
+import lighthouse from "@lighthouse-web3/sdk";
 
-const apiKey = "9a782bb5.5024fefce7204377bd04154f45c67ada";
 
+const apiKey = import.meta.env.VITE_LIGHTHOUSE_API_KEY;
+console.log(apiKey);
 interface KycVerificationPageProps {
   userPrincipal: string;
 }
@@ -66,44 +68,27 @@ const KycVerificationPage: React.FC<KycVerificationPageProps> = ({
     setErrorMessage("");
     setKycStatus("submitting");
 
-    try {
       const blob = new Blob([docFile], { type: docFile.type });
       const formData = new FormData();
       formData.append("file", blob, docFile.name);
 
-      const response = await fetch(
-        "https://node.lighthouse.storage/api/v0/add",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: formData,
-        }
-      );
+      const response = await lighthouse.upload(
+        formData,
+        apiKey
+      )
+      // const response = await fetch(
+      //   "https://node.lighthouse.storage/api/v0/add",
+      //   {
+      //     method: "POST",
+      //     headers: {
+      //       Authorization: `Bearer ${apiKey}`,
+      //     },
+      //     body: formData,
+      //   }
+      // );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data && data.Hash) {
-        console.log("File uploaded to IPFS:", data.Hash);
+        console.log("File uploaded to IPFS:", response);
         setKycStatus("verified");
-        setVerificationRefId(data.Hash);
-      } else {
-        throw new Error("Failed to get IPFS hash from response");
-      }
-    } catch (err) {
-      console.error("Upload Error:", err);
-      setKycStatus("rejected");
-      setErrorMessage(
-        err instanceof Error
-          ? err.message
-          : "An error occurred during KYC submission."
-      );
-    }
   };
 
   return (
