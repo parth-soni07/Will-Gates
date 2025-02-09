@@ -21,7 +21,8 @@ actor WillManager {
     assetType : Text;
     estimatedValue : Nat64;
     description : Text;
-    documentation : Text;
+    assignedTo : ?Principal;
+    isAssigned : Bool;
   };
 
   public type Will = {
@@ -84,7 +85,6 @@ actor WillManager {
     assetType : Text,
     estimatedValue : Nat64,
     description : Text,
-    documentation : Text,
   ) : async ?Asset {
     let owner = msg.caller;
     switch (willsMap.get(owner)) {
@@ -94,7 +94,8 @@ actor WillManager {
           assetType = assetType;
           estimatedValue = estimatedValue;
           description = description;
-          documentation = documentation;
+          assignedTo = null;
+          isAssigned = false;
         };
         let newAssets = Array.append(will.assets, [asset]);
         let updatedWill = { will with assets = newAssets };
@@ -170,19 +171,28 @@ actor WillManager {
     );
     return "Beneficiaries:\n" # beneficiariesInfo;
   };
+  public shared (msg) func assignAsset(beneficiary : Principal) : async Bool {
+    let owner = msg.caller;
+    switch (willsMap.get(owner)) {
+      case (?will) {
+        let updatedAssets = Array.map<Asset, Asset>(will.assets, func(a) { { a with assignedTo = ?beneficiary; isAssigned = true } });
+        let updatedWill = { will with assets = updatedAssets };
+        let _ = willsMap.put(owner, updatedWill);
+        return true;
+      };
+      case null { return false };
+    };
+  };
   public func showAssets() : async Text {
     var assetsInfo = "";
-    // Iterate through each will in the willsMap
     for ((_, will) in willsMap.entries()) {
-      // Manually iterate over the assets using Iter.range and index
       for (i in Iter.range(0, Nat.sub(will.assets.size(), 1))) {
         let asset = will.assets[i];
         assetsInfo := assetsInfo #
         "Asset Name: " # asset.assetName #
         ", Type: " # asset.assetType #
         ", Estimated Value: " # Nat64.toText(asset.estimatedValue) #
-        ", Description: " # asset.description #
-        ", Documentation: " # asset.documentation # "\n";
+        ", Description: " # asset.description # "\n";
       };
     };
     if (assetsInfo == "") {

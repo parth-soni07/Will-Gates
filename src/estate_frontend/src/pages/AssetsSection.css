@@ -1,0 +1,97 @@
+:root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --text-primary: #c9d1d9;
+    --text-secondary: #8b949e;
+    --accent-primary: #3a86ff;
+    --accent-secondary: #00bcd4;
+    --border-color: #30363d;
+}
+
+.assets-section {
+    padding: 2rem;
+    background-color: var(--bg-secondary);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.assets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+.asset-card {
+    background-color: var(--bg-tertiary);
+    border-radius: 10px;
+    padding: 1.5rem;
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.asset-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.asset-icon {
+    color: var(--accent-primary);
+    width: 32px;
+    height: 32px;
+    margin-bottom: 1rem;
+}
+
+.asset-card h4 {
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    margin: 0.5rem 0;
+}
+
+.asset-card p {
+    color: var(--text-secondary);
+    margin: 0.25rem 0;
+}
+
+.asset-value {
+    font-size: 1.25rem;
+    color: var(--accent-secondary) !important;
+    font-weight: 600;
+    margin-top: 0.5rem !important;
+}
+
+.assign-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem;
+    margin-top: 1rem;
+    background-color: rgba(58, 134, 255, 0.1);
+    color: var(--accent-primary);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.assign-button:hover {
+    background-color: var(--accent-primary);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .assets-section {
+        padding: 1rem;
+    }
+
+    .assets-grid {
+        grid-template-columns: 1fr;
+    }
+}

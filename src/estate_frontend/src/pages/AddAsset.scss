@@ -1,0 +1,136 @@
+$primary-color: #2563eb;
+$background-dark: #1f2937;
+$background-light: #374151;
+$text-light: #d1d5db;
+$text-dark: #ffffff;
+$border-color: #4b5563;
+$hover-bg: #1e40af;
+
+.add-asset-container {
+    max-width: 768px;
+    margin: auto;
+    padding: 3rem 1.5rem;
+    color: $text-dark;
+
+    .title {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .form-container {
+        background: $background-dark;
+        padding: 2rem;
+        border-radius: 8px;
+        border: 1px solid $border-color;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            color: $text-light;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: $background-light;
+            border: 1px solid $border-color;
+            border-radius: 6px;
+            color: $text-dark;
+            outline: none;
+            transition: border 0.2s ease-in-out;
+
+            &:focus {
+                border-color: $primary-color;
+            }
+        }
+
+        textarea {
+            resize: vertical;
+        }
+    }
+
+    .file-upload {
+        .file-drop {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            border: 2px dashed $border-color;
+            border-radius: 6px;
+            text-align: center;
+            color: $text-light;
+
+            .upload-icon {
+                width: 48px;
+                height: 48px;
+                margin-bottom: 0.5rem;
+                color: $text-light;
+            }
+
+            .file-label {
+                cursor: pointer;
+                font-weight: bold;
+                color: $primary-color;
+
+                &:hover {
+                    color: lighten($primary-color, 10%);
+                }
+            }
+
+            .file-size {
+                font-size: 0.75rem;
+                margin-top: 0.5rem;
+            }
+        }
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 1.5rem;
+
+        .cancel-btn,
+        .submit-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: background 0.2s ease-in-out;
+        }
+
+        .cancel-btn {
+            background: $background-light;
+            color: $text-light;
+            border: 1px solid $border-color;
+
+            &:hover {
+                background: darken($background-light, 10%);
+            }
+        }
+
+        .submit-btn {
+            background: $primary-color;
+            color: $text-dark;
+            border: none;
+
+            &:hover {
+                background: $hover-bg;
+            }
+
+            &:disabled {
+                background: $border-color;
+                cursor: not-allowed;
+            }
+        }
+    }
+}

@@ -1,19 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, Users, Wallet } from "lucide-react";
-
-interface Asset {
-  id: number;
-  name: string;
-  type: string;
-  value: string;
-  assignedTo: string | null;
-}
+import { X } from "lucide-react";
+import { estate_backend } from "../../../declarations/estate_backend";
+import "./CreateWill.css";
+import { Principal } from "@dfinity/principal";
+import BeneficiariesSection from "./BeneficiariesSection";
+import WillDetailsSection from "./WillDetailsSection";
+import AssetsSection from "./AssetsSection";
+import ReviewSection from "./ReviewSection";
+import ProgressTracker from "./ProgressTracker";
+import { getAssets } from "./assetStore";
 
 interface Beneficiary {
   id: number;
   name: string;
   relationship: string;
+  email: string;
+  principal: Principal
+}
+
+interface Asset {
+  id: number;
+  name: string;
+  type: string;
+  value: number;
+  description: string;
+  assignedTo: Principal | null;
+  isAssigned: boolean;
+  status: "Tokenized";
 }
 
 const CreateWill = () => {
@@ -22,260 +36,212 @@ const CreateWill = () => {
   const [willData, setWillData] = useState({
     title: "",
     description: "",
+    time: 0,
   });
   const [assets, setAssets] = useState<Asset[]>([]);
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
+  const [showBeneficiaryModal, setShowBeneficiaryModal] = useState(false);
+  const [selectedAssetId, setSelectedAssetId] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+  const [assignedBeneficiaries, setAssignedBeneficiaries] = useState<{
+    [key: number]: string;
+  }>({});
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setWillData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const fetchedAssets = await getAssets(); // Fetch assets from assetStore.ts
+        setAssets(
+          fetchedAssets.map((asset, index) => ({
+            id: index,
+            name: asset.assetName,
+            type: asset.assetType,
+            value: parseFloat(asset.estimatedValue.replace("$", "")), // Convert string to number
+            description: asset.description,
+            assignedTo: null, // Default value since it's not in assetStore
+            isAssigned: asset.isAssigned,
+            status: "Tokenized",
+          }))
+        );
 
-  const handleNextStep = () => {
-    if (currentStep < 4) {
-      setCurrentStep((prev) => prev + 1);
+        const beneficiariesResponse = await estate_backend.showBeneficiaries();
+        if (beneficiariesResponse !== "No beneficiaries registered.") {
+          const parsedBeneficiaries: Beneficiary[] = beneficiariesResponse
+            .split("\n")
+            .slice(1)
+            .map((line, index) => {
+              const parts = line.match(
+                /Name: (.*?) (.*?), Relationship: (.*?), Email: (.*?), Phone: (.*?), Wallet: (.*)/
+              );
+              return parts
+                ? {
+                    id: index,
+                    name: `${parts[1]} ${parts[2]}`,
+                    relationship: parts[3],
+                    email: parts[4],
+                  }
+                : null;
+            })
+            .filter((b): b is Beneficiary => b !== null);
+
+          setBeneficiaries(parsedBeneficiaries);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+      setLoading(false);
+    };
+
+    fetchData();
+  }, []);
+  const assignBeneficiaryToAsset = (assetId: number, beneficiaryId: number) => {
+    const selectedBeneficiary = beneficiaries.find(
+      (b: any) => b.id === beneficiaryId
+    );
+    if (selectedBeneficiary) {
+      setAssignedBeneficiaries((prev) => ({
+        ...prev,
+        [assetId]: selectedBeneficiary.name, // Store beneficiary's name against the asset ID
+      }));
     }
   };
-
-  const handlePrevStep = () => {
-    setCurrentStep((prev) => prev - 1);
+  const handleSelectBeneficiary = (beneficiaryId: number) => {
+    assignBeneficiaryToAsset(selectedAssetId, beneficiaryId); // Assign beneficiary
+    setShowBeneficiaryModal(false); // Close modal
   };
-
-  const handleSubmit = async () => {
-    // Here you would submit the will data to your backend
-    console.log("Submitting will:", {
-      ...willData,
-      assets,
-      beneficiaries,
-    });
-    navigate("/dashboard");
-  };
-
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-white mb-4">
-              Add Beneficiaries
-            </h3>
-            {/* Beneficiary list will be displayed here */}
-            <button
-              onClick={() => navigate("/beneficiaries/add")}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-            >
-              Add New Beneficiary
-            </button>
-          </div>
+  const handleAssign = async (beneficiaryPrincipal: Principal) => {
+      try {
+        const success = await estate_backend.assignAsset(beneficiaryPrincipal);
+        if (!success) {
+          console.error("Failed to assign the beneficiary.");
+          return;
+        }
+      } catch (error) {
+        console.error("Error creating assigning asset:", error);
+        return;
+      }
+    };
+  const handleNextStep = async () => {
+    if (currentStep === 2) {
+      try {
+        const success = await estate_backend.createWill(
+          willData.title,
+          willData.description,
+          BigInt(willData.time)
         );
-
-      case 2:
-        return (
-          <div className="space-y-6">
-            <div>
-              <label
-                htmlFor="title"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Will Title
-              </label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                value={willData.title}
-                onChange={handleInputChange}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter a title for your will"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="description"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Description (Optional)
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                value={willData.description}
-                onChange={handleInputChange}
-                rows={4}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Add any additional notes or instructions"
-              ></textarea>
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-white mb-4">
-              Add Assets
-            </h3>
-            {/* Asset list will be displayed here */}
-            <button
-              onClick={() => navigate("/assets/add")}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-            >
-              Add New Asset
-            </button>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-white mb-4">
-              Review Your Will
-            </h3>
-
-            <div className="bg-gray-700 rounded-lg p-6">
-              <h4 className="text-lg font-medium text-white mb-4">
-                Will Details
-              </h4>
-              <table className="w-full">
-                <tbody className="divide-y divide-gray-600">
-                  <tr>
-                    <td className="py-2 text-gray-300">Title</td>
-                    <td className="py-2 text-white">{willData.title}</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 text-gray-300">Description</td>
-                    <td className="py-2 text-white">{willData.description}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className="bg-gray-700 rounded-lg p-6">
-              <h4 className="text-lg font-medium text-white mb-4">
-                Beneficiaries
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {beneficiaries.map((beneficiary) => (
-                  <div
-                    key={beneficiary.id}
-                    className="bg-gray-600 rounded-lg p-4"
-                  >
-                    <h5 className="font-medium text-white">
-                      {beneficiary.name}
-                    </h5>
-                    <p className="text-gray-300">{beneficiary.relationship}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-gray-700 rounded-lg p-6">
-              <h4 className="text-lg font-medium text-white mb-4">Assets</h4>
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-gray-300">
-                    <th className="py-2">Asset</th>
-                    <th className="py-2">Type</th>
-                    <th className="py-2">Value</th>
-                    <th className="py-2">Assigned To</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-600">
-                  {assets.map((asset) => (
-                    <tr key={asset.id}>
-                      <td className="py-2 text-white">{asset.name}</td>
-                      <td className="py-2 text-gray-300">{asset.type}</td>
-                      <td className="py-2 text-gray-300">{asset.value}</td>
-                      <td className="py-2 text-gray-300">{asset.assignedTo}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
+        if (!success) {
+          console.error("Failed to create the will.");
+          return;
+        }
+      } catch (error) {
+        console.error("Error creating will:", error);
+        return;
+      }
+    } else if (currentStep === 3) {
+      for (const asset of assets) {
+        try {
+          await estate_backend.addAsset(
+            asset.name,
+            asset.type,
+            BigInt(asset.value),
+            asset.description
+          );
+        } catch (error) {
+          console.error("Error adding asset to the backend:", error);
+        }
+      }
     }
+    setCurrentStep((prev) => prev + 1);
   };
+
+  if (loading) {
+    return <div className="loading">Loading...</div>;
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold text-white mb-8">Create Your Will</h1>
+    <div className="create-will-container">
+      <h1 className="page-title">Create Your Will</h1>
+      <ProgressTracker currentStep={currentStep} />
+      <div className="content-section">
+        {currentStep === 1 && (
+          <BeneficiariesSection
+            beneficiaries={beneficiaries}
+            navigate={navigate}
+          />
+        )}
+        {currentStep === 2 && (
+          <WillDetailsSection willData={willData} setWillData={setWillData} />
+        )}
+        {currentStep === 3 && (
+          <AssetsSection
+            assets={assets}
+            setSelectedAssetId={setSelectedAssetId}
+            setShowBeneficiaryModal={setShowBeneficiaryModal}
+            assignedBeneficiaries={assignedBeneficiaries}
+          />
+        )}
+        {currentStep === 4 && (
+          <ReviewSection willData={willData} assets={assets} />
+        )}
+      </div>
 
-      {/* Steps Progress */}
-      <div className="mb-12">
-        <div className="flex justify-between items-center">
-          <div className="flex-1">
-            <div className="w-full bg-gray-700 rounded-full h-2">
-              <div
-                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${(currentStep / 4) * 100}%` }}
-              ></div>
+      <div className="navigation-buttons">
+        {currentStep > 1 && (
+          <button
+            onClick={() => setCurrentStep((prev) => prev - 1)}
+            className="prev-button"
+          >
+            Previous
+          </button>
+        )}
+        {currentStep < 4 ? (
+          <button onClick={handleNextStep} className="next-button">
+            Next Step
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="submit-button"
+          >
+            Submit Will
+          </button>
+        )}
+      </div>
+
+      {showBeneficiaryModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>Select Beneficiary</h3>
+              <button
+                className="close-modal"
+                onClick={() => {
+                  setShowBeneficiaryModal(false); // Close modal after selection
+                }}
+              >
+                <X />
+              </button>
+            </div>
+            <div className="modal-content">
+              {beneficiaries.map((beneficiary) => (
+                <button
+                  key={beneficiary.id}
+                  className="beneficiary-option"
+                  onClick={() => {
+                    handleSelectBeneficiary(beneficiary.id),
+                    handleAssign(beneficiary.principal)
+                  }}
+                >
+                  <span className="beneficiary-name">{beneficiary.name}</span>
+                  <span className="beneficiary-relationship">
+                    {beneficiary.relationship}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
-        <div className="flex justify-between mt-4 text-sm">
-          <span
-            className={currentStep >= 1 ? "text-blue-400" : "text-gray-400"}
-          >
-            Add Beneficiaries
-          </span>
-          <span
-            className={currentStep >= 2 ? "text-blue-400" : "text-gray-400"}
-          >
-            Create Will
-          </span>
-          <span
-            className={currentStep >= 3 ? "text-blue-400" : "text-gray-400"}
-          >
-            Add Assets
-          </span>
-          <span
-            className={currentStep >= 4 ? "text-blue-400" : "text-gray-400"}
-          >
-            Review
-          </span>
-        </div>
-      </div>
-
-      {/* Form */}
-      <div className="bg-gray-800 rounded-lg p-8 border border-gray-700">
-        {renderStep()}
-
-        <div className="flex justify-between mt-8">
-          {currentStep > 1 && (
-            <button
-              onClick={handlePrevStep}
-              className="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200"
-            >
-              Previous
-            </button>
-          )}
-          {currentStep < 4 ? (
-            <button
-              onClick={handleNextStep}
-              className="ml-auto px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
-            >
-              Next Step
-            </button>
-          ) : (
-            <button
-              onClick={handleSubmit}
-              className="ml-auto px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
-            >
-              Submit Will
-            </button>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 };

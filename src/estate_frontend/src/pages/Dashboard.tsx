@@ -16,7 +16,7 @@ const Dashboard = () => {
             <h3 className="stat-title">Tokenized Assets</h3>
             <Wallet className="stat-icon stat-icon-blue" />
           </div>
-          <p className="stat-value">12</p>
+          <p className="stat-value">2</p>
           <p className="stat-description">Total assets registered</p>
         </div>
 
@@ -34,7 +34,7 @@ const Dashboard = () => {
             <h3 className="stat-title">Beneficiaries</h3>
             <Users className="stat-icon stat-icon-purple" />
           </div>
-          <p className="stat-value">5</p>
+          <p className="stat-value">2</p>
           <p className="stat-description">Registered heirs</p>
         </div>
       </div>

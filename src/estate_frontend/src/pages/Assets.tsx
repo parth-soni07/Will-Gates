@@ -1,98 +1,58 @@
-import React from "react";
-import { Wallet, Plus } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import "./Assets.css";
+import { assetStore } from "./assetStore"; // Import asset store
 
 const Assets = () => {
   const navigate = useNavigate();
-  const assets = [
-    {
-      id: 1,
-      name: "Primary Residence",
-      type: "Real Estate",
-      value: "$500,000",
-      status: "Tokenized",
-    },
-    {
-      id: 2,
-      name: "Investment Portfolio",
-      type: "Financial",
-      value: "$250,000",
-      status: "Pending",
-    },
-    {
-      id: 3,
-      name: "Art Collection",
-      type: "Collectibles",
-      value: "$100,000",
-      status: "Tokenized",
-    },
-  ];
+  const [assets, setAssets] = useState(assetStore); // Directly use assetStore
+  const [loading, setLoading] = useState(false); // No need for async fetching
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-white">Digital Assets</h1>
-        <button
-          onClick={() => navigate("/add-asset")}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
-        >
-          <Plus className="h-5 w-5" />
+    <div className="container">
+      <div className="header">
+        <h1 className="title">Digital Assets</h1>
+        <button onClick={() => navigate("/add-asset")} className="add-button">
+          <Plus className="icon" />
           <span>Add New Asset</span>
         </button>
       </div>
 
-      <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-700">
-          <thead className="bg-gray-900">
-            <tr>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">
-                Asset Name
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">
-                Type
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">
-                Value
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">
-                Status
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-300">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-700">
-            {assets.map((asset) => (
-              <tr key={asset.id}>
-                <td className="px-6 py-4 text-sm text-white">{asset.name}</td>
-                <td className="px-6 py-4 text-sm text-gray-300">
-                  {asset.type}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-300">
-                  {asset.value}
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      asset.status === "Tokenized"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-yellow-100 text-yellow-800"
-                    }`}
-                  >
-                    {asset.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <button className="text-blue-400 hover:text-blue-300 transition-colors duration-200">
-                    View Details
-                  </button>
-                </td>
+      {loading ? (
+        <div className="loading">Loading assets...</div>
+      ) : assets.length === 0 ? (
+        <div className="empty-state">No assets registered.</div>
+      ) : (
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Asset Name</th>
+                <th>Type</th>
+                <th>Value</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {assets.map((asset, index) => (
+                <tr key={index}>
+                  <td>{asset.assetName}</td>
+                  <td>{asset.assetType}</td>
+                  <td>${asset.estimatedValue}</td>
+                  <td>
+                    <span className="status-badge tokenized">Tokenized</span>
+                  </td>
+                  <td>
+                    <button className="action-button">View Details</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
